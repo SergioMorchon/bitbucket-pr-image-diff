@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "ESNext",
+    "types": ["@total-typescript/ts-reset"],
+    "module": "NodeNext",
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["src/**/*.ts"]
+}

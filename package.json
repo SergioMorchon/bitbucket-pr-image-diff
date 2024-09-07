@@ -1,0 +1,15 @@
+{
+  "name": "bitbucket-pr-image-diff",
+  "scripts": {
+    "build": "bun build src/index.ts --target browser --packages bundle --outdir dist",
+    "dev": "bun run build --watch"
+  },
+  "devDependencies": {
+    "@total-typescript/ts-reset": "^0.6.1",
+    "@types/pixelmatch": "^5.2.6"
+  },
+  "packageManager": "yarn@4.4.1",
+  "dependencies": {
+    "pixelmatch": "^6.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Bitbucket image diff viewer",
+  "version": "1.0",
+  "content_scripts": [
+    {
+      "matches": ["https://bitbucket.org/*/*/pull-requests/*"],
+      "js": ["dist/index.js"]
+    }
+  ]
+}
