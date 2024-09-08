@@ -193,31 +193,51 @@ var getImageData = (image, width, height) => {
   context.drawImage(image, 0, 0);
   return context.getImageData(0, 0, width, height).data;
 };
+var getImageSize = (img) => ({
+  width: img.naturalWidth,
+  height: img.naturalHeight
+});
+var hasSize = (size) => size.width > 0 && size.height > 0;
+var waitForNaturalSize = async (img) => new Promise((resolve, reject) => {
+  const size = getImageSize(img);
+  if (hasSize(size)) {
+    return resolve(size);
+  }
+  const interval = setInterval((img2) => {
+    const size2 = getImageSize(img2);
+    if (hasSize(size2)) {
+      clearInterval(interval);
+      return resolve(size2);
+    }
+  }, 200, img);
+});
 var processContainers = () => {
-  getImageContainers().forEach((container) => {
-    if (container.hasAttribute(IMAGE_DIFF_PROCESSED_DATA_ATTRIBUTE)) {
+  getImageContainers().forEach(async (container) => {
+    const [before, after] = container.querySelectorAll("[data-testid=image-diff] img");
+    if (before.hasAttribute(IMAGE_DIFF_PROCESSED_DATA_ATTRIBUTE)) {
       return;
     }
-    container.setAttribute(IMAGE_DIFF_PROCESSED_DATA_ATTRIBUTE, "");
-    const [before, after] = container.querySelectorAll("[data-testid=image-diff] img");
-    before.addEventListener("load", () => {
-      after.addEventListener("load", () => {
-        const width = Math.max(before.naturalWidth, after.naturalWidth);
-        const height = Math.max(before.naturalHeight, after.naturalHeight);
-        const outputImageData = new ImageData(width, height);
-        pixelmatch(getImageData(before, width, height), getImageData(after, width, height), outputImageData.data, outputImageData.width, outputImageData.height, {
-          threshold: 0.1
-        });
-        const output = document.createElement("canvas");
-        after.parentElement?.appendChild(output);
-        output.width = width;
-        output.height = height;
-        output.style.width = "100%";
-        output.style.maxWidth = "calc(100% / 3)";
-        output.getContext("2d")?.putImageData(outputImageData, 0, 0);
-        container.querySelector("[data-testid=image-diff]")?.insertAdjacentElement("afterend", output);
-      });
+    before.setAttribute(IMAGE_DIFF_PROCESSED_DATA_ATTRIBUTE, "");
+    const [beforeSize, afterSize] = await Promise.all([
+      waitForNaturalSize(before),
+      waitForNaturalSize(after)
+    ]);
+    const width = Math.max(beforeSize.width, afterSize.width);
+    const height = Math.max(beforeSize.height, afterSize.height);
+    const outputImageData = new ImageData(width, height);
+    const beforeData = getImageData(before, width, height);
+    const afterData = getImageData(after, width, height);
+    pixelmatch(beforeData, afterData, outputImageData.data, outputImageData.width, outputImageData.height, {
+      threshold: 0.1
     });
+    const output = document.createElement("canvas");
+    after.parentElement?.appendChild(output);
+    output.width = width;
+    output.height = height;
+    output.style.width = "calc(100% / 3)";
+    output.getContext("2d")?.putImageData(outputImageData, 0, 0);
+    container.querySelector("[data-testid=image-diff]")?.insertAdjacentElement("afterend", output);
+    after.setAttribute(IMAGE_DIFF_PROCESSED_DATA_ATTRIBUTE, "");
   });
 };
 processContainers();
